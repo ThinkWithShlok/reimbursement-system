@@ -1,0 +1,16 @@
+-- ============================================================
+-- ExpenseFlow — Seed Data
+-- Run this AFTER schema.sql and AFTER creating auth users
+-- ============================================================
+-- NOTE: To seed properly, you need to:
+-- 1. Run schema.sql first
+-- 2. Create auth users via Supabase dashboard or API
+-- 3. Run this seed with the correct auth user IDs
+--
+-- For demo, the app handles seeding via the signup flow.
+-- Below is a reference for manual seeding if needed.
+
+-- The demo company, users, workflows, expenses, and approvals 
+-- are created automatically when users sign up through the app.
+-- Admin signs up first → creates company + default workflow.
+-- Then admin adds managers and employees via the user management page.
