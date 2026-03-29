@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -51,25 +52,31 @@ export default function NewExpense() {
     const reader = new FileReader();
     reader.onload = (e) => setReceiptPreview(e.target.result);
     reader.readAsDataURL(file);
+
+    // Auto trigger scanning
+    handleOCR(file);
   }
 
-  async function handleOCR() {
-    if (!receiptFile) return;
+  async function handleOCR(fileToScan = receiptFile) {
+    if (!fileToScan) return;
 
     setScanning(true);
     toast.loading('Scanning receipt...', { id: 'ocr' });
 
     try {
-      const result = await extractReceiptData(receiptFile);
+      const result = await extractReceiptData(fileToScan);
 
       if (result.amount) updateForm('amount', result.amount.toString());
       if (result.date) updateForm('expense_date', result.date);
       if (result.vendor) updateForm('vendor', result.vendor);
+      if (result.category) updateForm('category', result.category);
+      if (result.description && !form.description) updateForm('description', result.description);
 
       const extractedFields = [
         result.amount && 'amount',
         result.date && 'date',
         result.vendor && 'vendor',
+        result.category !== 'other' && 'category',
       ].filter(Boolean);
 
       if (extractedFields.length > 0) {

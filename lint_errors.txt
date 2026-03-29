@@ -1,0 +1,118 @@
+﻿
+> new-folder@0.0.0 lint
+> eslint .
+
+
+C:\Users\USER-PC\reimbursement-system\src\context\AuthContext.jsx
+  135:17  error  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\USER-PC\reimbursement-system\src\hooks\useApprovals.js
+   33:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  31 |
+  32 |   useEffect(() => {
+> 33 |     fetchApprovals();
+     |     ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  34 |   }, [fetchApprovals]);
+  35 |
+  36 |   return { approvals, loading, refetch: fetchApprovals };         react-hooks/set-state-in-effect
+  167:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  165 |
+  166 |   useEffect(() => {
+> 167 |     fetchApprovals();
+      |     ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  168 |   }, [fetchApprovals]);
+  169 |
+  170 |   return { approvals, loading, refetch: fetchApprovals };  react-hooks/set-state-in-effect
+
+C:\Users\USER-PC\reimbursement-system\src\hooks\useExpenses.js
+  41:5   error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  39 |
+  40 |   useEffect(() => {
+> 41 |     fetchExpenses();
+     |     ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  42 |   }, [fetchExpenses]);
+  43 |
+  44 |   return { expenses, loading, refetch: fetchExpenses };  react-hooks/set-state-in-effect
+  48:20  error  'company' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           no-unused-vars
+
+C:\Users\USER-PC\reimbursement-system\src\hooks\useUsers.js
+   29:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  27 |
+  28 |   useEffect(() => {
+> 29 |     fetchUsers();
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  30 |   }, [fetchUsers]);
+  31 |
+  32 |   async function createUser({ email, fullName, role, managerId }) {  react-hooks/set-state-in-effect
+  117:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+  115 |
+  116 |   useEffect(() => {
+> 117 |     fetchWorkflows();
+      |     ^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  118 |   }, [fetchWorkflows]);
+  119 |
+  120 |   async function createWorkflow(name) {           react-hooks/set-state-in-effect
+
+C:\Users\USER-PC\reimbursement-system\src\lib\ocr.js
+  43:17  error  Unnecessary escape character: \/  no-useless-escape
+  43:21  error  Unnecessary escape character: \.  no-useless-escape
+  43:32  error  Unnecessary escape character: \/  no-useless-escape
+  43:36  error  Unnecessary escape character: \.  no-useless-escape
+  44:15  error  Unnecessary escape character: \/  no-useless-escape
+  44:19  error  Unnecessary escape character: \.  no-useless-escape
+  44:30  error  Unnecessary escape character: \/  no-useless-escape
+  44:34  error  Unnecessary escape character: \.  no-useless-escape
+  67:47  error  Unnecessary escape character: \/  no-useless-escape
+  67:49  error  Unnecessary escape character: \-  no-useless-escape
+
+C:\Users\USER-PC\reimbursement-system\src\pages\Approvals.jsx
+  9:11  error  'profile' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\USER-PC\reimbursement-system\src\pages\Dashboard.jsx
+  12:41  error  'Icon' is defined but never used                                                            no-unused-vars
+  78:31  error  'appLoading' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+C:\Users\USER-PC\reimbursement-system\src\pages\NewExpense.jsx
+  21:11  error  'profile' is assigned a value but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+  80:14  error  'err' is defined but never used                                                          no-unused-vars
+
+C:\Users\USER-PC\reimbursement-system\src\pages\Workflows.jsx
+  2:10  error  'useAuth' is defined but never used. Allowed unused vars must match /^[A-Z_]/u  no-unused-vars
+
+Γ£û 23 problems (23 errors, 0 warnings)
+

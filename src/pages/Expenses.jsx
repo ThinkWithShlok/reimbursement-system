@@ -30,7 +30,7 @@ export default function Expenses() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-12">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -40,18 +40,18 @@ export default function Expenses() {
           </p>
         </div>
         <Link to="/expenses/new" className="btn-primary" id="btn-new-expense">
-          <Plus size={18} />
+          <Plus size={20} />
           New Expense
         </Link>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
+      <div className="flex flex-col sm:flex-row flex-wrap items-center gap-6 mt-12 mb-10">
+        <div className="relative w-full sm:flex-1 min-w-[300px]">
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]" />
           <input
             type="text"
-            className="input-field pl-9"
+            className="input-field pl-12 py-4 shadow-sm"
             placeholder="Search expenses..."
             value={search}
             onChange={e => setSearch(e.target.value)}
@@ -60,7 +60,7 @@ export default function Expenses() {
         </div>
 
         <select
-          className="input-field w-auto"
+          className="input-field w-full sm:w-auto py-4 shadow-sm"
           value={statusFilter}
           onChange={e => setStatusFilter(e.target.value)}
           id="filter-status"
@@ -107,7 +107,7 @@ export default function Expenses() {
           )}
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-6">
           {filtered.map((expense, i) => (
             <ExpenseRow key={expense.id} expense={expense} index={i} />
           ))}

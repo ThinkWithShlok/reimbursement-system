@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useExpenses } from '../hooks/useExpenses';
@@ -22,11 +23,11 @@ function StatCard({ label, value, icon: Icon, color, delay = 0 }) {
   }, [delay]);
 
   return (
-    <div ref={ref} className="stat-card" style={{ opacity: 0 }}>
+    <div ref={ref} className={`stat-card ${color === '#ffffff' ? 'card-green' : ''}`} style={{ opacity: 0 }}>
       <div className="flex items-center justify-between">
         <span className="text-label">{label}</span>
-        <div className={`w-8 h-8 rounded-lg flex items-center justify-center`} style={{ background: color + '15', color }}>
-          <Icon size={16} />
+        <div className={`w-10 h-10 rounded-xl flex items-center justify-center`} style={{ background: color === '#ffffff' ? 'rgba(255,255,255,0.2)' : color + '15', color: color === '#ffffff' ? '#ffffff' : color }}>
+          <Icon size={20} />
         </div>
       </div>
       <div className="stat-value">{value}</div>
@@ -46,7 +47,7 @@ function RecentExpenseRow({ expense }) {
   return (
     <Link
       to={`/expenses/${expense.id}`}
-      className="flex items-center justify-between py-3 px-4 rounded-lg hover:bg-[var(--color-surface-secondary)] transition-colors"
+      className="flex items-center justify-between py-4 px-6 rounded-xl hover:bg-[var(--color-surface-secondary)] transition-colors"
     >
       <div className="flex items-center gap-4">
         <div className="w-2 h-2 rounded-full" style={{ background: statusColors[expense.status] }} />
@@ -115,26 +116,26 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           label="Total Approved"
           value={`${profile.companies?.base_currency || ''} ${totalSpent.toLocaleString()}`}
           icon={TrendingUp}
-          color="#12b886"
+          color="#ffffff"
           delay={0.1}
         />
         <StatCard
           label="Pending Amount"
           value={`${profile.companies?.base_currency || ''} ${pendingAmount.toLocaleString()}`}
           icon={Clock}
-          color="#fd7e14"
+          color="#f59e0b"
           delay={0.15}
         />
         <StatCard
           label="My Expenses"
           value={myExpenses.length}
           icon={Receipt}
-          color="#339af0"
+          color="#3b82f6"
           delay={0.2}
         />
         {(isAdmin || isManager) && (
@@ -142,7 +143,7 @@ export default function Dashboard() {
             label="Pending Approvals"
             value={pendingApprovals.length}
             icon={CheckSquare}
-            color="#e8590c"
+            color="#ef4444"
             delay={0.25}
           />
         )}

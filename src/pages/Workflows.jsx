@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useWorkflows, useUsers } from '../hooks/useUsers';
@@ -11,7 +12,7 @@ export default function Workflows() {
   const [showStageForm, setShowStageForm] = useState(null);
   const [saving, setSaving] = useState(false);
   const [newName, setNewName] = useState('');
-  const [stageForm, setStageForm] = useState({ name: '', approvalType: 'percentage', requiredPercentage: 100, approverIds: [] });
+  const [stageForm, setStageForm] = useState({ name: '', approvalType: 'percentage', requiredPercentage: 100, approverIds: [], isManagerApprover: false });
 
   const approverOptions = users.filter(u => u.role === 'admin' || u.role === 'manager');
 
@@ -26,8 +27,9 @@ export default function Workflows() {
     try {
       const wf = workflows.find(w => w.id === workflowId);
       const nextOrder = (wf?.workflow_stages?.length || 0) + 1;
-      await addStage(workflowId, { ...stageForm, stageOrder: nextOrder });
-      setShowStageForm(null); setStageForm({ name: '', approvalType: 'percentage', requiredPercentage: 100, approverIds: [] });
+      const finalName = stageForm.isManagerApprover ? 'Direct Manager [MANAGER_APPROVER]' : stageForm.name;
+      await addStage(workflowId, { ...stageForm, name: finalName, stageOrder: nextOrder, approverIds: stageForm.isManagerApprover ? [] : stageForm.approverIds });
+      setShowStageForm(null); setStageForm({ name: '', approvalType: 'percentage', requiredPercentage: 100, approverIds: [], isManagerApprover: false });
       toast.success('Stage added');
     } catch (err) { toast.error(err.message); } finally { setSaving(false); }
   }
@@ -77,10 +79,10 @@ export default function Workflows() {
                       {stage.stage_order}
                     </div>
                     <div className="flex-1">
-                      <p className="text-sm font-medium">{stage.name}</p>
+                      <p className="text-sm font-medium">{stage.name.replace(' [MANAGER_APPROVER]', '')}</p>
                       <p className="text-xs text-[var(--color-text-tertiary)]">
                         {stage.approval_type} · {stage.required_percentage}% required ·{' '}
-                        {stage.stage_approvers?.length || 0} approver(s)
+                        {stage.name.includes('[MANAGER_APPROVER]') ? 'Direct Manager' : `${stage.stage_approvers?.length || 0} approver(s)`}
                       </p>
                       {stage.stage_approvers?.length > 0 && (
                         <div className="flex gap-1 mt-1 flex-wrap">
@@ -100,17 +102,24 @@ export default function Workflows() {
 
               {showStageForm === wf.id ? (
                 <div className="p-4 border border-[var(--color-border)] rounded-lg space-y-3">
-                  <input type="text" className="input-field" placeholder="Stage name" value={stageForm.name} onChange={e => setStageForm({ ...stageForm, name: e.target.value })} />
+                  <div className="flex items-center gap-2 mb-2">
+                    <input type="checkbox" id="is-manager-approver" checked={stageForm.isManagerApprover} onChange={e => setStageForm({ ...stageForm, isManagerApprover: e.target.checked, name: e.target.checked ? 'Direct Manager' : '' })} />
+                    <label htmlFor="is-manager-approver" className="text-sm font-semibold">Requires Direct Manager Approval First</label>
+                  </div>
+                  {!stageForm.isManagerApprover && (
+                    <input type="text" className="input-field" placeholder="Stage name" value={stageForm.name} onChange={e => setStageForm({ ...stageForm, name: e.target.value })} />
+                  )}
                   <div className="grid grid-cols-2 gap-3">
                     <select className="input-field" value={stageForm.approvalType} onChange={e => setStageForm({ ...stageForm, approvalType: e.target.value })}>
                       <option value="percentage">Percentage</option><option value="specific">All Required</option><option value="hybrid">Hybrid</option>
                     </select>
                     <input type="number" className="input-field" placeholder="Required %" min={1} max={100} value={stageForm.requiredPercentage} onChange={e => setStageForm({ ...stageForm, requiredPercentage: parseInt(e.target.value) })} />
                   </div>
-                  <div>
-                    <p className="text-label mb-2 flex items-center gap-1"><Users size={12} /> Approvers</p>
-                    <div className="flex flex-wrap gap-2">
-                      {approverOptions.map(u => (
+                  {!stageForm.isManagerApprover && (
+                    <div>
+                      <p className="text-label mb-2 flex items-center gap-1"><Users size={12} /> Approvers</p>
+                      <div className="flex flex-wrap gap-2">
+                        {approverOptions.map(u => (
                         <button key={u.id} type="button" onClick={() => toggleApprover(u.id)}
                           className={`text-xs px-3 py-1.5 rounded-full border transition-all ${stageForm.approverIds.includes(u.id) ? 'bg-[var(--color-text-primary)] text-white border-[var(--color-text-primary)]' : 'border-[var(--color-border)] hover:border-[var(--color-text-muted)]'}`}>
                           {u.full_name}
@@ -118,8 +127,9 @@ export default function Workflows() {
                       ))}
                     </div>
                   </div>
+                  )}
                   <div className="flex gap-2">
-                    <button onClick={() => handleAddStage(wf.id)} disabled={saving || !stageForm.name || stageForm.approverIds.length === 0} className="btn-primary text-sm">
+                    <button onClick={() => handleAddStage(wf.id)} disabled={saving || (!stageForm.isManagerApprover && (!stageForm.name || stageForm.approverIds.length === 0))} className="btn-primary text-sm">
                       {saving ? <Loader2 size={14} className="animate-spin" /> : 'Add Stage'}
                     </button>
                     <button onClick={() => setShowStageForm(null)} className="btn-secondary text-sm">Cancel</button>

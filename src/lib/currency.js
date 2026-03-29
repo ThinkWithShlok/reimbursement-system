@@ -49,10 +49,10 @@ export async function getExchangeRate(from, to) {
     return cached[cacheKey];
   }
 
-  // Try Frankfurter API
+  // Try ExchangeRate API (Required by Hackathon)
   try {
     const res = await fetch(
-      `https://api.frankfurter.dev/latest?from=${from}&to=${to}`
+      `https://api.exchangerate-api.com/v4/latest/${from}`
     );
     if (res.ok) {
       const data = await res.json();

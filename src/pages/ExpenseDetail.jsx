@@ -27,7 +27,7 @@ export default function ExpenseDetail() {
   const { profile, isAdmin } = useAuth();
   const { submitExpense, deleteExpense } = useExpenseActions();
   const { approvals, loading: appLoading, refetch: refetchApprovals } = useExpenseApprovals(id);
-  const { actOnApproval } = useApprovalActions();
+  const { actOnApproval, adminOverrideExpense } = useApprovalActions();
   const [expense, setExpense] = useState(null);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(false);
@@ -63,6 +63,18 @@ export default function ExpenseDetail() {
       const { data } = await supabase.from('expenses').select('*, users!expenses_user_id_fkey(full_name, email)').eq('id', id).single();
       if (data) setExpense(data);
       setComment(''); toast.success(action === 'approved' ? 'Approved!' : 'Rejected');
+    } catch (e) { toast.error(e.message); } finally { setActing(false); }
+  }
+
+  async function handleAdminOverride(action) {
+    if (!confirm(`Are you sure you want to FORCE ${action.toUpperCase()} this expense? This bypasses the workflow.`)) return;
+    setActing(true);
+    try {
+      await adminOverrideExpense(id, action, comment);
+      refetchApprovals();
+      const { data } = await supabase.from('expenses').select('*, users!expenses_user_id_fkey(full_name, email)').eq('id', id).single();
+      if (data) setExpense(data);
+      setComment(''); toast.success(`Admin Override: ${action.toUpperCase()}`);
     } catch (e) { toast.error(e.message); } finally { setActing(false); }
   }
 
@@ -132,7 +144,7 @@ export default function ExpenseDetail() {
               </div>
             ))}</div>}
 
-          {myPending.length > 0 && (
+          {myPending.length > 0 ? (
             <div className="mt-6 pt-6 border-t border-[var(--color-border)]">
               <h4 className="text-heading text-sm mb-3">Your Action Required</h4>
               <textarea className="input-field mb-3" rows={2} placeholder="Comment (optional)" value={comment} onChange={e => setComment(e.target.value)} id="approval-comment" />
@@ -141,7 +153,16 @@ export default function ExpenseDetail() {
                 <button onClick={() => handleApproval(myPending[0].id, 'rejected')} disabled={acting} className="btn-danger flex-1 justify-center" id="btn-reject">{acting ? <Loader2 size={16} className="animate-spin" /> : <XCircle size={16} />} Reject</button>
               </div>
             </div>
-          )}
+          ) : isAdmin && expense.status === 'in_approval' ? (
+            <div className="mt-6 pt-6 border-t border-[var(--color-border)] bg-[var(--color-warning-light)] -mx-8 px-8 pb-4 rounded-b-2xl">
+              <h4 className="text-heading text-sm mb-3 text-[var(--color-warning)] pt-2">Admin Override</h4>
+              <textarea className="input-field mb-3 bg-white" rows={2} placeholder="Override Reason (optional)" value={comment} onChange={e => setComment(e.target.value)} />
+              <div className="flex gap-2">
+                <button onClick={() => handleAdminOverride('approved')} disabled={acting} className="btn-primary flex-1 justify-center" style={{ background: 'var(--color-success)' }}>Force Approve</button>
+                <button onClick={() => handleAdminOverride('rejected')} disabled={acting} className="btn-danger flex-1 justify-center">Force Reject</button>
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

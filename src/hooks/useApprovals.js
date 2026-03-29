@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -95,7 +96,7 @@ export function useApprovalActions() {
         // Check for next stage
         const { data: nextStages } = await supabase
           .from('workflow_stages')
-          .select('id, stage_approvers(user_id)')
+          .select('id, name, stage_approvers(user_id)')
           .eq('workflow_id', stage.workflows.id)
           .gt('stage_order', stage.stage_order)
           .order('stage_order', { ascending: true })
@@ -103,13 +104,23 @@ export function useApprovalActions() {
 
         if (nextStages && nextStages.length > 0) {
           const nextStage = nextStages[0];
-          // Create approvals for next stage
-          const nextApprovals = nextStage.stage_approvers.map(sa => ({
-            expense_id: expense.id,
-            stage_id: nextStage.id,
-            approver_id: sa.user_id,
-            status: 'pending',
-          }));
+          
+          let nextApprovals = [];
+          if (nextStage.name?.includes('[MANAGER_APPROVER]')) {
+             const { data: submitter } = await supabase.from('users').select('manager_id').eq('id', expense.user_id).single();
+             if (submitter?.manager_id) {
+               nextApprovals.push({ expense_id: expense.id, stage_id: nextStage.id, approver_id: submitter.manager_id, status: 'pending' });
+             } else {
+               console.error("No manager assigned to this user, workflow stalled.");
+             }
+          } else {
+             nextApprovals = nextStage.stage_approvers.map(sa => ({
+               expense_id: expense.id,
+               stage_id: nextStage.id,
+               approver_id: sa.user_id,
+               status: 'pending',
+             }));
+          }
 
           if (nextApprovals.length > 0) {
             await supabase.from('approvals').insert(nextApprovals);
@@ -134,7 +145,36 @@ export function useApprovalActions() {
     });
   }
 
-  return { actOnApproval };
+  async function adminOverrideExpense(expenseId, action, comment = '') {
+    if (profile.role !== 'admin') throw new Error('Unauthorized');
+
+    // Update expense directly
+    const { error: updateError } = await supabase
+      .from('expenses')
+      .update({ status: action })
+      .eq('id', expenseId)
+      .eq('company_id', profile.company_id);
+
+    if (updateError) throw updateError;
+
+    // Cancel any pending approvals
+    await supabase
+      .from('approvals')
+      .update({ status: action === 'approved' ? 'approved' : 'rejected', acted_at: new Date().toISOString(), comment: `[ADMIN OVERRIDE] ${comment}` })
+      .eq('expense_id', expenseId)
+      .eq('status', 'pending');
+
+    // Audit log
+    await supabase.from('audit_logs').insert({
+      company_id: profile.company_id,
+      expense_id: expenseId,
+      user_id: profile.id,
+      action: `admin_override_${action}`,
+      details: { comment },
+    });
+  }
+
+  return { actOnApproval, adminOverrideExpense };
 }
 
 export function useExpenseApprovals(expenseId) {

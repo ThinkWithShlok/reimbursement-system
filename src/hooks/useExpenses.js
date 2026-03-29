@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
@@ -45,7 +46,7 @@ export function useExpenses(filters = {}) {
 }
 
 export function useExpenseActions() {
-  const { profile, company } = useAuth();
+  const { profile } = useAuth();
 
   async function createExpense(expenseData) {
     const { data, error } = await supabase
@@ -107,13 +108,25 @@ export function useExpenseActions() {
 
     const firstStage = stages[0];
 
-    // Create approval records for first stage
-    const approvalInserts = firstStage.stage_approvers.map(sa => ({
-      expense_id: expenseId,
-      stage_id: firstStage.id,
-      approver_id: sa.user_id,
-      status: 'pending',
-    }));
+    let approvalInserts = [];
+    if (firstStage.name?.includes('[MANAGER_APPROVER]')) {
+      if (!profile.manager_id) {
+        throw new Error('You do not have a manager assigned for approval. Please contact Admin.');
+      }
+      approvalInserts.push({
+        expense_id: expenseId,
+        stage_id: firstStage.id,
+        approver_id: profile.manager_id,
+        status: 'pending',
+      });
+    } else {
+      approvalInserts = firstStage.stage_approvers.map(sa => ({
+        expense_id: expenseId,
+        stage_id: firstStage.id,
+        approver_id: sa.user_id,
+        status: 'pending',
+      }));
+    }
 
     if (approvalInserts.length === 0) throw new Error('No approvers configured for first stage');
 

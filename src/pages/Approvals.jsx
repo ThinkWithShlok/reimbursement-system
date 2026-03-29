@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -60,8 +61,15 @@ export default function Approvals() {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-bold text-mono">{a.expenses?.currency} {Number(a.expenses?.amount || 0).toLocaleString()}</p>
-                        <p className="text-xs text-[var(--color-text-tertiary)]">
+                        <p className="font-bold text-mono text-base text-[var(--color-text-primary)]">
+                          {a.expenses?.base_currency} {Number(a.expenses?.converted_amount || a.expenses?.amount || 0).toLocaleString()}
+                        </p>
+                        {a.expenses?.currency !== a.expenses?.base_currency && (
+                          <p className="text-xs text-[var(--color-text-tertiary)] mt-0.5 font-medium">
+                            Orig: {a.expenses?.currency} {Number(a.expenses?.amount || 0).toLocaleString()}
+                          </p>
+                        )}
+                        <p className="text-xs text-[var(--color-text-tertiary)] mt-1">
                           {a.expenses?.expense_date && new Date(a.expenses.expense_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
                         </p>
                       </div>

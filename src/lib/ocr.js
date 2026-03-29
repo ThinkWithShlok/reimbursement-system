@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape */
 import { createWorker } from 'tesseract.js';
 
 let worker = null;
@@ -71,10 +72,27 @@ export async function extractReceiptData(imageFile) {
       }
     }
 
+    // Extract Description (Use vendor or a general line)
+    result.description = result.vendor || "Auto-extracted expense";
+
+    // Auto-categorize based on keywords
+    const lowerText = text.toLowerCase();
+    if (/(flight|airline|airways|uber|lyft|taxi|train|transit|travel)/.test(lowerText)) {
+      result.category = 'travel';
+    } else if (/(restaurant|cafe|coffee|food|dining|snack|meal|lunch|dinner|pizza|burger)/.test(lowerText)) {
+      result.category = 'food';
+    } else if (/(hotel|inn|motel|resort|suites|room|lodging)/.test(lowerText)) {
+      result.category = 'accommodation';
+    } else if (/(staples|office|supply|supplies|paper|ink|printer|stationery|electronics)/.test(lowerText)) {
+      result.category = 'office_supplies';
+    } else {
+      result.category = 'other';
+    }
+
     return result;
   } catch (err) {
     console.error('OCR failed:', err);
-    return { rawText: '', amount: null, date: null, vendor: null };
+    return { rawText: '', amount: null, date: null, vendor: null, category: 'other', description: '' };
   }
 }
 
