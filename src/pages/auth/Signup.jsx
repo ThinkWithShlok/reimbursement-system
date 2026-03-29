@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getCountriesWithCurrencies } from '../../lib/currency';
-import { Zap, ArrowRight, Loader2 } from 'lucide-react';
+import { Zap, ArrowRight, Loader2, Shield, Users, Briefcase } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function Signup() {
@@ -17,6 +17,7 @@ export default function Signup() {
     companyName: '',
     country: '',
     baseCurrency: '',
+    role: 'employee',
   });
 
   useEffect(() => {
@@ -51,27 +52,38 @@ export default function Signup() {
     }
   }
 
+  const roles = [
+    { value: 'admin', label: 'Admin', icon: Shield },
+    { value: 'manager', label: 'Manager', icon: Users },
+    { value: 'employee', label: 'Employee', icon: Briefcase },
+  ];
+
   return (
     <div className="auth-container">
       <div className="auth-card animate-fade-in-up">
         {/* Logo */}
-        <div className="flex items-center gap-3 mb-10">
-          <div className="w-10 h-10 bg-[var(--color-text-primary)] rounded-xl flex items-center justify-center">
-            <Zap size={20} className="text-white" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '2rem' }}>
+          <div style={{
+            width: 42, height: 42,
+            background: 'var(--color-text-primary)',
+            borderRadius: 12,
+            display: 'flex', alignItems: 'center', justifyContent: 'center'
+          }}>
+            <Zap size={20} color="#fff" />
           </div>
-          <span className="text-display text-2xl">ExpenseFlow</span>
+          <span className="text-display" style={{ fontSize: '1.5rem' }}>ExpenseFlow</span>
         </div>
 
         {/* Heading */}
-        <h1 className="text-display text-3xl mb-2">Create your account</h1>
-        <p className="text-[var(--color-text-secondary)] mb-8">
+        <h1 className="text-display" style={{ fontSize: '1.75rem', marginBottom: '0.375rem' }}>Create your account</h1>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.9375rem', marginBottom: '1.75rem' }}>
           Set up your company and start tracking expenses
         </p>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="text-label block mb-2">Full Name</label>
+        <form onSubmit={handleSubmit}>
+          <div style={{ marginBottom: '1rem' }}>
+            <label className="text-label" style={{ display: 'block', marginBottom: '0.5rem' }}>Full Name</label>
             <input
               type="text"
               className="input-field"
@@ -83,8 +95,8 @@ export default function Signup() {
             />
           </div>
 
-          <div>
-            <label className="text-label block mb-2">Company Name</label>
+          <div style={{ marginBottom: '1rem' }}>
+            <label className="text-label" style={{ display: 'block', marginBottom: '0.5rem' }}>Company Name</label>
             <input
               type="text"
               className="input-field"
@@ -96,8 +108,8 @@ export default function Signup() {
             />
           </div>
 
-          <div>
-            <label className="text-label block mb-2">Country</label>
+          <div style={{ marginBottom: '1rem' }}>
+            <label className="text-label" style={{ display: 'block', marginBottom: '0.5rem' }}>Country</label>
             <select
               className="input-field"
               value={form.country}
@@ -115,14 +127,20 @@ export default function Signup() {
           </div>
 
           {form.baseCurrency && (
-            <div className="px-3 py-2 bg-[var(--color-surface-secondary)] rounded-lg text-sm animate-fade-in">
-              <span className="text-[var(--color-text-tertiary)]">Base currency: </span>
-              <span className="font-semibold">{form.baseCurrency}</span>
+            <div style={{
+              padding: '0.5rem 0.75rem',
+              background: 'var(--color-surface-secondary)',
+              borderRadius: 8,
+              fontSize: '0.875rem',
+              marginBottom: '1rem',
+            }}>
+              <span style={{ color: 'var(--color-text-tertiary)' }}>Base currency: </span>
+              <span style={{ fontWeight: 600 }}>{form.baseCurrency}</span>
             </div>
           )}
 
-          <div>
-            <label className="text-label block mb-2">Email</label>
+          <div style={{ marginBottom: '1rem' }}>
+            <label className="text-label" style={{ display: 'block', marginBottom: '0.5rem' }}>Email</label>
             <input
               type="email"
               className="input-field"
@@ -134,8 +152,8 @@ export default function Signup() {
             />
           </div>
 
-          <div>
-            <label className="text-label block mb-2">Password</label>
+          <div style={{ marginBottom: '1rem' }}>
+            <label className="text-label" style={{ display: 'block', marginBottom: '0.5rem' }}>Password</label>
             <input
               type="password"
               className="input-field"
@@ -148,10 +166,35 @@ export default function Signup() {
             />
           </div>
 
+          {/* Role Selector */}
+          <div style={{ marginBottom: '1.5rem' }}>
+            <label className="text-label" style={{ display: 'block', marginBottom: '0.5rem' }}>Sign up as</label>
+            <div style={{ display: 'flex', gap: '0.5rem' }} id="signup-role-selector">
+              {roles.map(r => {
+                const Icon = r.icon;
+                const isActive = form.role === r.value;
+                return (
+                  <button
+                    key={r.value}
+                    type="button"
+                    onClick={() => setForm({ ...form, role: r.value })}
+                    className="role-card"
+                    data-active={isActive}
+                    id={`signup-role-${r.value}`}
+                  >
+                    <Icon size={18} style={{ marginBottom: 2 }} />
+                    <span className="role-card-label">{r.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <button
             type="submit"
             disabled={loading}
-            className="btn-primary w-full justify-center py-3 text-base mt-6"
+            className="btn-primary"
+            style={{ width: '100%', justifyContent: 'center', padding: '0.875rem', fontSize: '1rem' }}
             id="signup-submit"
           >
             {loading ? (
@@ -165,9 +208,14 @@ export default function Signup() {
           </button>
         </form>
 
-        <p className="text-center text-sm text-[var(--color-text-tertiary)] mt-8">
+        <p style={{
+          textAlign: 'center', fontSize: '0.875rem',
+          color: 'var(--color-text-tertiary)', marginTop: '1.75rem'
+        }}>
           Already have an account?{' '}
-          <Link to="/login" className="text-[var(--color-text-primary)] font-semibold hover:underline">
+          <Link to="/login" style={{
+            color: 'var(--color-text-primary)', fontWeight: 600, textDecoration: 'none'
+          }}>
             Sign in
           </Link>
         </p>

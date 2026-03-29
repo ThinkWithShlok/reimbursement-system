@@ -97,10 +97,10 @@ export function useExpenseActions() {
 
     if (!workflow) throw new Error('No active workflow found');
 
-    // Get first stage + approvers
+    // Get first stage + approvers (include name for [MANAGER_APPROVER] detection)
     const { data: stages } = await supabase
       .from('workflow_stages')
-      .select('id, stage_order, stage_approvers(user_id)')
+      .select('id, name, stage_order, stage_approvers(user_id)')
       .eq('workflow_id', workflow.id)
       .order('stage_order', { ascending: true });
 
@@ -109,10 +109,8 @@ export function useExpenseActions() {
     const firstStage = stages[0];
 
     let approvalInserts = [];
-    if (firstStage.name?.includes('[MANAGER_APPROVER]')) {
-      if (!profile.manager_id) {
-        throw new Error('You do not have a manager assigned for approval. Please contact Admin.');
-      }
+    if (profile.manager_id) {
+      // Route specifically to the direct manager
       approvalInserts.push({
         expense_id: expenseId,
         stage_id: firstStage.id,
@@ -120,6 +118,7 @@ export function useExpenseActions() {
         status: 'pending',
       });
     } else {
+      // Fallback to Admin or explicitly configured stage approvers
       approvalInserts = firstStage.stage_approvers.map(sa => ({
         expense_id: expenseId,
         stage_id: firstStage.id,

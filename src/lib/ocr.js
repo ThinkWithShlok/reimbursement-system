@@ -1,20 +1,76 @@
 /* eslint-disable no-useless-escape */
-import { createWorker } from 'tesseract.js';
+import Tesseract from 'tesseract.js';
 
-let worker = null;
+const { createWorker } = Tesseract;
+
+let workerInstance = null;
+let workerReady = false;
 
 async function getWorker() {
-  if (!worker) {
-    worker = await createWorker('eng');
+  // If the previous worker is broken, discard it
+  if (workerInstance && !workerReady) {
+    try { await workerInstance.terminate(); } catch (_) { /* ignore */ }
+    workerInstance = null;
   }
-  return worker;
+
+  if (!workerInstance) {
+    try {
+      console.log('[OCR] Initializing Tesseract worker...');
+      workerInstance = await createWorker('eng', 1, {
+        logger: m => {
+          if (m.status) console.log(`[OCR] ${m.status}: ${Math.round((m.progress || 0) * 100)}%`);
+        },
+      });
+      workerReady = true;
+      console.log('[OCR] Worker ready');
+    } catch (err) {
+      console.error('[OCR] Worker initialization failed:', err);
+      workerInstance = null;
+      workerReady = false;
+      throw new Error('Failed to initialize OCR engine: ' + (err?.message || err));
+    }
+  }
+  return workerInstance;
+}
+
+// Convert a File/Blob to a data URL for more reliable recognition
+function fileToDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsDataURL(file);
+  });
 }
 
 // Extract text from a receipt image and attempt to parse structured data
 export async function extractReceiptData(imageFile) {
+  let w;
   try {
-    const w = await getWorker();
-    const { data: { text } } = await w.recognize(imageFile);
+    w = await getWorker();
+  } catch (initErr) {
+    console.error('[OCR] Cannot get worker:', initErr);
+    throw initErr;
+  }
+
+  try {
+    // Convert File to dataURL for cross-browser reliability
+    let imageInput = imageFile;
+    if (imageFile instanceof File || imageFile instanceof Blob) {
+      imageInput = await fileToDataURL(imageFile);
+    }
+
+    console.log('[OCR] Starting recognition...');
+    const ocrResult = await w.recognize(imageInput);
+    console.log('[OCR] Raw recognize result:', ocrResult);
+    // tesseract.js v5+ returns { data: { text } }, but some versions return { jobId, data: { text } }
+    const text = ocrResult?.data?.text || '';
+    console.log('[OCR] Raw text extracted:', text.substring(0, 200));
+
+    if (!text || text.trim().length === 0) {
+      console.warn('[OCR] No text could be extracted from the image');
+      return { rawText: '', amount: null, date: null, vendor: null, category: 'other', description: '' };
+    }
 
     const result = {
       rawText: text,
@@ -29,13 +85,18 @@ export async function extractReceiptData(imageFile) {
       /[₹$€£¥]\s*([\d,]+\.?\d{0,2})/,
       /(?:total|amount)[:\s]*([\d,]+\.?\d{0,2})/i,
       /([\d,]+\.\d{2})\s*(?:total|due)/i,
+      // Fallback: any number with decimal
+      /([\d,]+\.\d{2})/,
     ];
 
     for (const pattern of amountPatterns) {
       const match = text.match(pattern);
       if (match) {
-        result.amount = parseFloat(match[1].replace(/,/g, ''));
-        break;
+        const parsed = parseFloat(match[1].replace(/,/g, ''));
+        if (parsed > 0 && parsed < 1000000) {
+          result.amount = parsed;
+          break;
+        }
       }
     }
 
@@ -63,7 +124,6 @@ export async function extractReceiptData(imageFile) {
     // Extract vendor — usually the first prominent line
     const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 2);
     if (lines.length > 0) {
-      // Skip lines that are just numbers/dates
       for (const line of lines.slice(0, 5)) {
         if (!/^\d+$/.test(line) && !/^\d{1,2}[\/\-]/.test(line) && line.length > 2) {
           result.vendor = line.substring(0, 60);
@@ -72,8 +132,8 @@ export async function extractReceiptData(imageFile) {
       }
     }
 
-    // Extract Description (Use vendor or a general line)
-    result.description = result.vendor || "Auto-extracted expense";
+    // Extract Description
+    result.description = result.vendor || 'Auto-extracted expense';
 
     // Auto-categorize based on keywords
     const lowerText = text.toLowerCase();
@@ -89,16 +149,22 @@ export async function extractReceiptData(imageFile) {
       result.category = 'other';
     }
 
+    console.log('[OCR] Parsed result:', { amount: result.amount, date: result.date, vendor: result.vendor, category: result.category });
     return result;
   } catch (err) {
-    console.error('OCR failed:', err);
-    return { rawText: '', amount: null, date: null, vendor: null, category: 'other', description: '' };
+    console.error('[OCR] Recognition failed:', err);
+    // Mark worker as broken so it gets recreated next time
+    workerReady = false;
+    throw new Error('OCR recognition failed: ' + (err?.message || err));
   }
 }
 
 export async function terminateWorker() {
-  if (worker) {
-    await worker.terminate();
-    worker = null;
+  if (workerInstance) {
+    try {
+      await workerInstance.terminate();
+    } catch (_) { /* ignore */ }
+    workerInstance = null;
+    workerReady = false;
   }
 }

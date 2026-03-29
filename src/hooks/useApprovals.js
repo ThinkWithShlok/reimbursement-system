@@ -87,10 +87,10 @@ export function useApprovalActions() {
       const stageComplete = (
         stage.approval_type === 'percentage' && percentage >= stage.required_percentage
       ) || (
-        stage.approval_type === 'specific' && approved === total
-      ) || (
-        stage.approval_type === 'hybrid' && (percentage >= stage.required_percentage || approved === total)
-      );
+          stage.approval_type === 'specific' && approved === total
+        ) || (
+          stage.approval_type === 'hybrid' && (percentage >= stage.required_percentage || approved === total)
+        );
 
       if (stageComplete) {
         // Check for next stage
@@ -104,22 +104,22 @@ export function useApprovalActions() {
 
         if (nextStages && nextStages.length > 0) {
           const nextStage = nextStages[0];
-          
+
           let nextApprovals = [];
           if (nextStage.name?.includes('[MANAGER_APPROVER]')) {
-             const { data: submitter } = await supabase.from('users').select('manager_id').eq('id', expense.user_id).single();
-             if (submitter?.manager_id) {
-               nextApprovals.push({ expense_id: expense.id, stage_id: nextStage.id, approver_id: submitter.manager_id, status: 'pending' });
-             } else {
-               console.error("No manager assigned to this user, workflow stalled.");
-             }
+            const { data: submitter } = await supabase.from('users').select('manager_id').eq('id', expense.user_id).single();
+            if (submitter?.manager_id) {
+              nextApprovals.push({ expense_id: expense.id, stage_id: nextStage.id, approver_id: submitter.manager_id, status: 'pending' });
+            } else {
+              console.error("No manager assigned to this user, workflow stalled.");
+            }
           } else {
-             nextApprovals = nextStage.stage_approvers.map(sa => ({
-               expense_id: expense.id,
-               stage_id: nextStage.id,
-               approver_id: sa.user_id,
-               status: 'pending',
-             }));
+            nextApprovals = nextStage.stage_approvers.map(sa => ({
+              expense_id: expense.id,
+              stage_id: nextStage.id,
+              approver_id: sa.user_id,
+              status: 'pending',
+            }));
           }
 
           if (nextApprovals.length > 0) {

@@ -7,4 +7,9 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
+  resolve: {
+    alias: {
+      'tesseract.js': 'tesseract.js/dist/tesseract.esm.min.js',
+    },
+  },
 })

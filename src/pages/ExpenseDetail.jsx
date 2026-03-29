@@ -128,21 +128,21 @@ export default function ExpenseDetail() {
         <div className="card-elevated">
           <h3 className="text-heading text-base mb-6">Approval Timeline</h3>
           {appLoading ? <div className="flex justify-center py-8"><div className="spinner" /></div>
-          : approvals.length === 0 ? <p className="text-sm text-[var(--color-text-tertiary)] py-4">{expense.status === 'draft' ? 'Submit to start approval' : 'No records'}</p>
-          : <div className="timeline">{approvals.map(a => (
-              <div key={a.id} className="timeline-item">
-                <div className={`timeline-dot ${a.status === 'approved' ? 'success' : a.status === 'rejected' ? 'danger' : 'warning'}`} />
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold">{a.users?.full_name || 'Unknown'}</span>
-                    <span className={`status-chip status-${a.status}`}>{a.status}</span>
+            : approvals.length === 0 ? <p className="text-sm text-[var(--color-text-tertiary)] py-4">{expense.status === 'draft' ? 'Submit to start approval' : 'No records'}</p>
+              : <div className="timeline">{approvals.map(a => (
+                <div key={a.id} className="timeline-item">
+                  <div className={`timeline-dot ${a.status === 'approved' ? 'success' : a.status === 'rejected' ? 'danger' : 'warning'}`} />
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold">{a.users?.full_name || 'Unknown'}</span>
+                      <span className={`status-chip status-${a.status}`}>{a.status}</span>
+                    </div>
+                    <p className="text-xs text-[var(--color-text-tertiary)] mt-1">{a.workflow_stages?.name} · Stage {a.workflow_stages?.stage_order}</p>
+                    {a.comment && <div className="flex items-start gap-2 mt-2 p-2 bg-[var(--color-surface-secondary)] rounded-lg"><MessageSquare size={12} className="text-[var(--color-text-tertiary)] mt-0.5" /><p className="text-xs">{a.comment}</p></div>}
+                    {a.acted_at && <p className="text-xs text-[var(--color-text-muted)] mt-1">{new Date(a.acted_at).toLocaleString()}</p>}
                   </div>
-                  <p className="text-xs text-[var(--color-text-tertiary)] mt-1">{a.workflow_stages?.name} · Stage {a.workflow_stages?.stage_order}</p>
-                  {a.comment && <div className="flex items-start gap-2 mt-2 p-2 bg-[var(--color-surface-secondary)] rounded-lg"><MessageSquare size={12} className="text-[var(--color-text-tertiary)] mt-0.5" /><p className="text-xs">{a.comment}</p></div>}
-                  {a.acted_at && <p className="text-xs text-[var(--color-text-muted)] mt-1">{new Date(a.acted_at).toLocaleString()}</p>}
                 </div>
-              </div>
-            ))}</div>}
+              ))}</div>}
 
           {myPending.length > 0 ? (
             <div className="mt-6 pt-6 border-t border-[var(--color-border)]">

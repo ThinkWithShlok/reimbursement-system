@@ -64,7 +64,7 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  async function signUp({ email, password, fullName, companyName, country, baseCurrency }) {
+  async function signUp({ email, password, fullName, companyName, country, baseCurrency, role }) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -74,15 +74,27 @@ export function AuthProvider({ children }) {
           company_name: companyName,
           country,
           base_currency: baseCurrency,
+          role: role || 'employee',
         },
       },
     });
 
     if (error) throw error;
 
-    // Wait for trigger then fetch profile
+    // Wait for trigger then fetch profile and update role
     if (data.user) {
       await new Promise(r => setTimeout(r, 1000));
+      // Update the role in the users table
+      if (role) {
+        const { data: profile } = await supabase
+          .from('users')
+          .select('id')
+          .eq('auth_id', data.user.id)
+          .single();
+        if (profile) {
+          await supabase.from('users').update({ role }).eq('id', profile.id);
+        }
+      }
       await fetchProfile(data.user.id);
     }
 

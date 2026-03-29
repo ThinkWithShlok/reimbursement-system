@@ -61,7 +61,7 @@ export default function NewExpense() {
     if (!fileToScan) return;
 
     setScanning(true);
-    toast.loading('Scanning receipt...', { id: 'ocr' });
+    toast.loading('Scanning receipt with OCR...', { id: 'ocr' });
 
     try {
       const result = await extractReceiptData(fileToScan);
@@ -85,7 +85,8 @@ export default function NewExpense() {
         toast('Could not extract data. Please fill manually.', { id: 'ocr', icon: '⚠️' });
       }
     } catch (err) {
-      toast.error('OCR failed. Please fill manually.', { id: 'ocr' });
+      console.error('OCR error:', err);
+      toast.error(err.message || 'OCR failed. Please fill manually.', { id: 'ocr' });
     } finally {
       setScanning(false);
     }
